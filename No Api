@@ -1,0 +1,46 @@
+import streamlit as st
+import pandas as pd
+import numpy as np
+import datetime
+
+st.set_page_config(page_title="Gold XAUUSD Signal Monitor", layout="wide")
+st.title("📊 Live Gold (XAUUSD) Signal System")
+
+@st.cache_data(ttl=300)
+def fetch_simulated_data():
+    now = datetime.datetime.now()
+    timestamps = [now - datetime.timedelta(minutes=5 * i) for i in range(100)][::-1]
+    prices = np.cumsum(np.random.randn(100) * 0.5) + 1900
+    df = pd.DataFrame({'Time': timestamps, 'Close': prices})
+    df.set_index('Time', inplace=True)
+    df['EMA50'] = df['Close'].ewm(span=50).mean()
+    df['EMA200'] = df['Close'].ewm(span=200).mean()
+    df['RSI'] = compute_rsi(df['Close'])
+    return df
+
+def compute_rsi(series, period=14):
+    delta = series.diff()
+    gain = delta.clip(lower=0)
+    loss = -1 * delta.clip(upper=0)
+    avg_gain = gain.rolling(window=period).mean()
+    avg_loss = loss.rolling(window=period).mean()
+    rs = avg_gain / avg_loss
+    return 100 - (100 / (1 + rs))
+
+def generate_signal(df):
+    last = df.iloc[-1]
+    if last['EMA50'] > last['EMA200'] and last['RSI'] > 55:
+        return "📈 BUY", "green"
+    elif last['EMA50'] < last['EMA200'] and last['RSI'] < 45:
+        return "📉 SELL", "red"
+    else:
+        return "⏸️ NO SIGNAL", "gray"
+
+try:
+    df = fetch_simulated_data()
+    signal, color = generate_signal(df)
+    st.subheader(f"📢 Signal: {signal}")
+    st.line_chart(df['Close'])
+    st.caption(f"Updated: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+except Exception as e:
+    st.error(f"❌ Error fetching or processing data: {e}")
