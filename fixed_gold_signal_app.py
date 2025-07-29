@@ -5,7 +5,7 @@ import requests
 import datetime
 
 # Settings
-API_KEY = '5A4W4SWN6KBXT4WC'
+API_KEY = '359659ab-af4e-48e1-bbc9-b7ef4a41a3da'
 symbol = 'XAUUSD'
 
 st.set_page_config(page_title="Gold Signals", layout="wide")
